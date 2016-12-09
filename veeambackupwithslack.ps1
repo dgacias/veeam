@@ -14,7 +14,6 @@ $EnableQuiescence = $False
 $EnableEncryption = $False
 # Retention possible values: Never , Tonight, TomorrowNight, In3days, In1Week, In2Weeks, In1Month)
 $Retention = "In3days"
-
 $ESTADOWARNING = 0
 $ESTADOFAILED = 0
 $ESTADOSUCCESS = 0
@@ -30,7 +29,6 @@ Connect-VIServer $HostName -User $vmwareuser -Password $vmwarepassword
 #specific: $VMNames = "vmname1,vmname2,vmname3"
 
 $VMNames = (VMware.VimAutomation.Core\Get-VM | foreach { $_.Name })
-
 
 write-host "Starting backups..."
 Asnp VeeamPSSnapin
@@ -58,23 +56,21 @@ foreach ($VMName in $VMNames)
     elseif ($boolwarning -eq $True) { $ESTADOWARNING++ }
     else { $ESTADOFAILED++ }
     
-#Deduplication (fully optional)
-#Write-Host "Deduplicating..."
-#Start-DedupJob -Type Optimization d:
+    #Deduplication (fully optional, windows server feature)
+    #Write-Host "Deduplicating..."
+    #Start-DedupJob -Type Optimization d:
     
     #concatenate result to slack message
     $textoresultado = $VMName + ": " + $resultado + "\n"
     $mensajeslack = $mensajeslack + $textoresultado
-}  
+}
 
 #Post to slack
 Write-host "Sending message to Slack..."
-
-
 $json = "{`"text`": `"$mensajeslack`",`"attachments`":[{`"color`": `"good`",`"fields`": [{`"title`": `"Success`",`"value`": `"$ESTADOSUCCESS`",`"short`": false}]},{`"color`": `"warning`",`"fields`": [{`"title`": `"Warning`",`"value`": `"$ESTADOWARNING`",`"short`": false}]},{`"color`": `"danger`",`"fields`": [{`"title`": `"Failed`",`"value`": `"$ESTADOFAILED`",`"short`": false}]}]}"
-
 Invoke-WebRequest -Uri $webhookuri -Body $json -ContentType "application/json" -Method Post -UseBasicParsing
 
+#for logging
 if ($ESTADOFAILED -gt 0 ) {Write-host "There are fails!"; exit(1)}
 elseif ($ESTADOWARNING -gt 0 ) {Write-host "There are warnings!"; exit(1)}
 elseif ($ESTADOSUCCESS -gt 0 ) {Write-host "Everything is OK!"; exit(0)}
