@@ -27,7 +27,7 @@ Connect-VIServer $HostName -User $vmwareuser -Password $vmwarepassword
 
 #You can specify vm's names or backup all avaliable machines:
 #all: $VMNames = (VMware.VimAutomation.Core\Get-VM | foreach { $_.Name })
-#specific: "vmname1,vmname2,vmname3"
+#specific: $VMNames = "vmname1,vmname2,vmname3"
 
 $VMNames = (VMware.VimAutomation.Core\Get-VM | foreach { $_.Name })
 
